@@ -1,0 +1,48 @@
+-- How many users do we have?
+
+SELECT COUNT(DISTINCT(USER_ID))
+FROM dev_db.dbt_nemsaaaigmailcom.stg_postgres__users
+
+-- On average, how many orders do we receive per hour? 7.520833
+SELECT 
+    COUNT(ORDER_ID) / COUNT(DISTINCT DATE_TRUNC('hour', CREATED_AT)) AS avg_orders_per_hour
+FROM 
+    dev_db.dbt_nemsaaaigmailcom.stg_postgres__orders;
+
+
+-- On average, how long does an order take from being placed to being delivered? 5604.196721
+SELECT 
+    AVG(DATEDIFF('minute', CREATED_AT, DELIVERED_AT)) AS avg_delivery_time_minutes
+FROM 
+    dev_db.dbt_nemsaaaigmailcom.stg_postgres__orders
+WHERE 
+    DELIVERED_AT IS NOT NULL;
+
+
+-- How many users have only made one purchase? Two purchases? Three+ purchases?25,28,71
+-- Note: a purchase is considered a single order.
+
+SELECT 
+    purchase_count, 
+    COUNT(user_id) AS user_count
+FROM (
+    SELECT 
+        USER_ID, 
+        COUNT(ORDER_ID) AS purchase_count
+    FROM 
+        dev_db.dbt_nemsaaaigmailcom.stg_postgres__orders
+    GROUP BY 
+        USER_ID
+) purchase_summary
+GROUP BY 
+    purchase_count
+ORDER BY 
+    purchase_count;
+
+
+-- On average, how many unique sessions do we have per hour? 9.965517
+SELECT 
+    COUNT(DISTINCT SESSION_ID) / COUNT(DISTINCT DATE_TRUNC('hour', CREATED_AT)) AS avg_sessions_per_hour
+FROM 
+    dev_db.dbt_nemsaaaigmailcom.stg_postgres__events;
+
